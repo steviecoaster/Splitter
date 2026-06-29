@@ -30,9 +30,11 @@ Import-Module .\Splitter.psd1 -Force
 Get-Command -Module Splitter
 ```
 
-## Command Surface
+## Available Commands
 
-Core media and image commands:
+The following commands are available:
+
+### Core media and image commands:
 
 - Mount-WindowsInstallMedia
 - Dismount-WindowsInstallMedia
@@ -42,7 +44,7 @@ Core media and image commands:
 - New-WindowsInstallMedia
 - Split-WindowsInstallMedia
 
-Offline servicing commands:
+### Offline servicing commands:
 
 - Add-WindowsDriver
 - Add-WindowsPackage
