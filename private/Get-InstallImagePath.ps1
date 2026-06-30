@@ -2,7 +2,8 @@ function Get-InstallImagePath {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $MediaRoot
+        [string]
+        $MediaRoot
     )
 
     $wimPath = Join-Path $MediaRoot 'sources\install.wim'

@@ -2,7 +2,8 @@ function Get-ImageInfo {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $ImagePath
+        [string]
+        $ImagePath
     )
 
     $dismArgs = @(

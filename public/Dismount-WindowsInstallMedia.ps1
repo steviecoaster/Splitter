@@ -20,10 +20,12 @@ function Dismount-WindowsInstallMedia {
     [CmdletBinding(DefaultParameterSetName = 'ByPath', SupportsShouldProcess)]
     param(
         [Parameter(Mandatory, ParameterSetName = 'ByPath')]
-        [string] $ImagePath,
+        [string]
+        $ImagePath,
 
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'ByObject')]
-        [psobject] $InputObject
+        [psobject]
+        $InputObject
     )
 
     process {

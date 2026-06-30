@@ -31,18 +31,24 @@ function Add-WindowsDriver {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [string] $MediaRoot,
+        [string]
+        $MediaRoot,
 
         [Parameter(Mandatory)]
-        [string] $DriverPath,
+        [string]
+        $DriverPath,
 
-        [int[]] $Index,
+        [int[]]
+        $Index,
 
-        [switch] $Recurse,
+        [switch]
+        $Recurse,
 
-        [switch] $ForceUnsigned,
+        [switch]
+        $ForceUnsigned,
 
-        [string] $MountRoot = (Join-Path $env:TEMP 'SplitterMounts')
+        [string]
+        $MountRoot = (Join-Path $env:TEMP 'SplitterMounts')
     )
 
     $resolveDriverPathParams = @{

@@ -50,6 +50,9 @@ Alias of IncludeServerCore.
 .PARAMETER PassThru
 Returns result objects for each generated edition.
 
+.PARAMETER SkipBootableIso
+Skips the final bootable ISO build step and leaves the edited media folder on disk.
+
 .EXAMPLE
 Split-WindowsInstallMedia -SourceIso '.\Windows.iso' -EditionName Standard, Datacenter -WorkingRoot '.\work' -OutputRoot '.\out' -Verbose
 
@@ -67,69 +70,45 @@ function Split-WindowsInstallMedia {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $SourceIso,
+        [string]
+        $SourceIso,
 
         [Parameter(Mandatory)]
-        [string[]] $EditionName,
+        [string[]]
+        $EditionName,
 
         [Parameter(Mandatory)]
-        [string] $WorkingRoot,
+        [string]
+        $WorkingRoot,
 
         [Parameter(Mandatory)]
-        [string] $OutputRoot,
+        [string]
+        $OutputRoot,
 
         [Alias('BaseIsoName', 'IsoBaseName')]
-        [string] $OutputBaseName,
+        [string]
+        $OutputBaseName,
 
-        [string] $LabelPrefix = 'WIN',
+        [string]
+        $LabelPrefix = 'WIN',
 
-        [hashtable] $EditionLabelMap,
+        [hashtable]
+        $EditionLabelMap,
 
         [Alias('DesktopExperience')]
-        [switch] $IncludeDesktopExperience,
+        [switch]
+        $IncludeDesktopExperience,
 
         [Alias('ServerCore')]
-        [switch] $IncludeServerCore,
+        [switch]
+        $IncludeServerCore,
 
-        [switch] $PassThru
+        [switch]
+        $SkipBootableIso,
+
+        [switch]
+        $PassThru
     )
-
-    function Format-ByteSize {
-        param(
-            [Parameter(Mandatory)]
-            [long] $Bytes
-        )
-
-        if ($Bytes -lt 1KB) {
-            return "$Bytes B"
-        }
-
-        if ($Bytes -lt 1MB) {
-            return ('{0:N2} KB' -f ($Bytes / 1KB))
-        }
-
-        if ($Bytes -lt 1GB) {
-            return ('{0:N2} MB' -f ($Bytes / 1MB))
-        }
-
-        return ('{0:N2} GB' -f ($Bytes / 1GB))
-    }
-
-    function Get-PercentDelta {
-        param(
-            [Parameter(Mandatory)]
-            [long] $Base,
-
-            [Parameter(Mandatory)]
-            [long] $Current
-        )
-
-        if ($Base -le 0) {
-            return [double] 0
-        }
-
-        return [math]::Round((($Current - $Base) / [double] $Base) * 100, 2)
-    }
 
     $resolvePathParams = @{
         LiteralPath = $SourceIso
@@ -303,21 +282,38 @@ function Split-WindowsInstallMedia {
                 }
             }
 
-            Write-Verbose "Building ISO for edition '$edition' at $outputIsoPath"
-            $newBootableIsoParams = @{
-                OscdimgPath = $oscdimgPath
-                MediaRoot = $editionMediaRoot
-                OutputIso = $outputIsoPath
-                Label = $isoLabel
-            }
-            New-BootableIso @newBootableIsoParams
+            $isoBuilt = $false
+            $outputIsoSizeBytes = $null
 
-            $outputIsoSizeBytes = (Get-Item -LiteralPath $outputIsoPath).Length
+            if (-not $SkipBootableIso) {
+                Write-Verbose "Building ISO for edition '$edition' at $outputIsoPath"
+                $newBootableIsoParams = @{
+                    OscdimgPath = $oscdimgPath
+                    MediaRoot = $editionMediaRoot
+                    OutputIso = $outputIsoPath
+                    Label = $isoLabel
+                }
+                New-BootableIso @newBootableIsoParams
+
+                $outputIsoSizeBytes = (Get-Item -LiteralPath $outputIsoPath).Length
+                $isoBuilt = $true
+            }
+
             $installImageDeltaPct = Get-PercentDelta -Base $sourceImageSizeBytes -Current $destinationImageSizeBytes
-            $isoDeltaPct = Get-PercentDelta -Base $sourceIsoSizeBytes -Current $outputIsoSizeBytes
+            $isoDeltaPct = if ($isoBuilt) {
+                Get-PercentDelta -Base $sourceIsoSizeBytes -Current $outputIsoSizeBytes
+            }
+            else {
+                $null
+            }
 
             Write-Verbose ("Size report [{0}] image: {1} -> {2} ({3:N2}% delta)" -f $edition, (Format-ByteSize -Bytes $sourceImageSizeBytes), (Format-ByteSize -Bytes $destinationImageSizeBytes), $installImageDeltaPct)
-            Write-Verbose ("Size report [{0}] iso: {1} -> {2} ({3:N2}% delta)" -f $edition, (Format-ByteSize -Bytes $sourceIsoSizeBytes), (Format-ByteSize -Bytes $outputIsoSizeBytes), $isoDeltaPct)
+            if ($isoBuilt) {
+                Write-Verbose ("Size report [{0}] iso: {1} -> {2} ({3:N2}% delta)" -f $edition, (Format-ByteSize -Bytes $sourceIsoSizeBytes), (Format-ByteSize -Bytes $outputIsoSizeBytes), $isoDeltaPct)
+            }
+            else {
+                Write-Verbose "Skipped ISO build for edition '$edition' because -SkipBootableIso was specified."
+            }
 
             $result = [pscustomobject]@{
                 Edition = $edition
@@ -326,6 +322,7 @@ function Split-WindowsInstallMedia {
                 InstallWim = $destinationImagePath
                 OutputIso = $outputIsoPath
                 Label = $isoLabel
+                IsoBuilt = $isoBuilt
                 SourceIsoSizeBytes = $sourceIsoSizeBytes
                 SourceInstallImageSizeBytes = $sourceImageSizeBytes
                 OutputInstallImageSizeBytes = $destinationImageSizeBytes

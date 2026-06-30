@@ -2,7 +2,8 @@ function New-CleanDirectory {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [string]
+        $Path
     )
 
     $testPathParams = @{

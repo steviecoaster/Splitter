@@ -16,7 +16,8 @@ function Remove-WindowsInstallImage {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [string] $MediaRoot
+        [string]
+        $MediaRoot
     )
 
     $removePaths = @(

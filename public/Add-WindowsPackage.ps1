@@ -31,18 +31,24 @@ function Add-WindowsPackage {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [string] $MediaRoot,
+        [string]
+        $MediaRoot,
 
         [Parameter(Mandatory)]
-        [string] $PackagePath,
+        [string]
+        $PackagePath,
 
-        [int[]] $Index,
+        [int[]]
+        $Index,
 
-        [switch] $IgnoreCheck,
+        [switch]
+        $IgnoreCheck,
 
-        [switch] $PreventPending,
+        [switch]
+        $PreventPending,
 
-        [string] $MountRoot = (Join-Path $env:TEMP 'SplitterMounts')
+        [string]
+        $MountRoot = (Join-Path $env:TEMP 'SplitterMounts')
     )
 
     $resolvePackagePathParams = @{

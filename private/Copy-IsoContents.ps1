@@ -2,10 +2,12 @@ function Copy-IsoContents {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $SourcePath,
+        [string]
+        $SourcePath,
 
         [Parameter(Mandatory)]
-        [string] $DestinationPath
+        [string]
+        $DestinationPath
     )
 
     $newCleanDirectoryParams = @{

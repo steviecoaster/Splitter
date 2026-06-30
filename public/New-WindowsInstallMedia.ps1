@@ -18,10 +18,12 @@ function New-WindowsInstallMedia {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $SourcePath,
+        [string]
+        $SourcePath,
 
         [Parameter(Mandatory)]
-        [string] $DestinationPath
+        [string]
+        $DestinationPath
     )
 
     Write-Verbose "Copying media from $SourcePath to $DestinationPath"

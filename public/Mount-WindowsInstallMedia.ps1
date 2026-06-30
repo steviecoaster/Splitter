@@ -16,7 +16,8 @@ function Mount-WindowsInstallMedia {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [string]
+        $Path
     )
 
     $resolvePathParams = @{

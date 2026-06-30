@@ -2,20 +2,29 @@ function Invoke-NativeProcess {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $FilePath,
+        [string]
+        $FilePath,
 
-        [string[]] $ArgumentList = @(),
+        [string[]]
+        $ArgumentList = @(),
 
-        [switch] $CaptureOutput,
+        [switch]
+        $CaptureOutput,
 
-        [string] $WorkingDirectory
+        [string]
+        $WorkingDirectory
     )
 
     $runner = {
         param(
-            [string] $RunnerFilePath,
-            [string[]] $RunnerArgumentList,
-            [string] $RunnerWorkingDirectory
+            [string]
+            $RunnerFilePath,
+
+            [string[]]
+            $RunnerArgumentList,
+
+            [string]
+            $RunnerWorkingDirectory
         )
 
         if (-not [string]::IsNullOrWhiteSpace($RunnerWorkingDirectory)) {

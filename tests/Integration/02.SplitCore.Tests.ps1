@@ -87,4 +87,27 @@ Describe -Name 'Split core integration' -Tag 'Integration' -Skip:(-not $canRunIn
         $result.Count | Should -Be 1
         [System.IO.Path]::GetFileName($result[0].OutputIso) | Should -Be 'ServerAlias-Standard.iso'
     }
+
+    It 'can skip automatic ISO build' {
+        if (-not ($script:images | Where-Object { $_.Name -like '*Standard*' })) {
+            Set-ItResult -Skipped -Because 'No Standard image found in ISO.'
+        }
+
+        $scenarioRoot = Join-Path $script:testRoot 'SplitCoreSkipIsoBuild'
+        $workingRoot = Join-Path $scenarioRoot 'work'
+        $outputRoot = Join-Path $scenarioRoot 'out'
+
+        if (Test-Path -LiteralPath $scenarioRoot) {
+            Remove-Item -LiteralPath $scenarioRoot -Recurse -Force
+        }
+        New-Item -Path $scenarioRoot -ItemType Directory -Force | Out-Null
+
+        $result = @(Split-WindowsInstallMedia -SourceIso $script:isoPath -EditionName @('Standard') -WorkingRoot $workingRoot -OutputRoot $outputRoot -BaseIsoName 'SkipIsoBuild' -SkipBootableIso -PassThru)
+
+        $result.Count | Should -Be 1
+        $result[0].IsoBuilt | Should -BeFalse
+        (Join-Path $outputRoot 'SkipIsoBuild-Standard.iso') | Should -Be $result[0].OutputIso
+        (Test-Path -LiteralPath $result[0].OutputIso) | Should -BeFalse
+        (Test-Path -LiteralPath $result[0].MediaRoot) | Should -BeTrue
+    }
 }

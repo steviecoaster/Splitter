@@ -26,16 +26,20 @@ function Export-WindowsInstallImage {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $SourceImagePath,
+        [string]
+        $SourceImagePath,
 
         [Parameter(Mandatory)]
-        [string] $DestinationWim,
+        [string]
+        $DestinationWim,
 
         [Parameter(Mandatory)]
-        [object[]] $Image,
+        [object[]]
+        $Image,
 
         [ValidateSet('none', 'fast', 'max', 'recovery')]
-        [string] $Compression = 'max'
+        [string]
+        $Compression = 'max'
     )
 
     if (-not (Test-Path -LiteralPath $SourceImagePath)) {

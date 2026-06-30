@@ -22,12 +22,15 @@ function Add-UnattendFile {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory)]
-        [string] $MediaRoot,
+        [string]
+        $MediaRoot,
 
         [Parameter(Mandatory)]
-        [string] $UnattendPath,
+        [string]
+        $UnattendPath,
 
-        [string] $DestinationRelativePath = 'autounattend.xml'
+        [string]
+        $DestinationRelativePath = 'autounattend.xml'
     )
 
     $resolveUnattendPathParams = @{

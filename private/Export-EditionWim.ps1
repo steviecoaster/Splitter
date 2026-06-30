@@ -2,16 +2,20 @@ function Export-EditionWim {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $SourceImagePath,
+        [string]
+        $SourceImagePath,
 
         [Parameter(Mandatory)]
-        [object[]] $Images,
+        [object[]]
+        $Images,
 
         [Parameter(Mandatory)]
-        [string] $EditionName,
+        [string]
+        $EditionName,
 
         [Parameter(Mandatory)]
-        [string] $DestinationWim
+        [string]
+        $DestinationWim
     )
 
     $testDestinationWimParams = @{

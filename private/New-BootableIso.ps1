@@ -2,16 +2,20 @@ function New-BootableIso {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $OscdimgPath,
+        [string]
+        $OscdimgPath,
 
         [Parameter(Mandatory)]
-        [string] $MediaRoot,
+        [string]
+        $MediaRoot,
 
         [Parameter(Mandatory)]
-        [string] $OutputIso,
+        [string]
+        $OutputIso,
 
         [Parameter(Mandatory)]
-        [string] $Label
+        [string]
+        $Label
     )
 
     $etfsboot = Join-Path $MediaRoot 'boot\etfsboot.com'

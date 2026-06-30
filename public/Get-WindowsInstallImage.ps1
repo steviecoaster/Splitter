@@ -22,11 +22,14 @@ function Get-WindowsInstallImage {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string] $ImagePath,
+        [string]
+        $ImagePath,
 
-        [string[]] $Name,
+        [string[]]
+        $Name,
 
-        [int[]] $Index
+        [int[]]
+        $Index
     )
 
     $getImageInfoParams = @{
