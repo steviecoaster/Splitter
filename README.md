@@ -49,206 +49,103 @@ The following commands are available:
 - Add-WindowsDriver
 - Add-WindowsPackage
 - Add-UnattendFile
+- Build-BootableIso
 
-## Quick Start
+## How to use Splitter
 
-### Split an ISO by edition (generic)
+The easiest way to think about Splitter is as a 4-step workflow:
 
-```powershell
-Import-Module .\Splitter.psd1 -Force
+1. Split the ISO into a working media folder.
+2. Inject files into that folder.
+3. Add `autounattend.xml` if you want unattended setup.
+4. Build the final bootable ISO.
 
-$splitParams = @{
-  SourceIso = 'D:\ISO\Windows.iso'
-  EditionName = 'Standard', 'Datacenter'
-  WorkingRoot = 'D:\Work\Splitter'
-  OutputRoot = 'D:\Output'
-  Verbose = $true
-}
+If you only want the working folder and do not want an ISO yet, use
+`-SkipBootableIso` on `Split-WindowsInstallMedia` and run `Build-BootableIso`
+later.
 
-Split-WindowsInstallMedia @splitParams
-```
+### Recommended end-to-end example
 
-### Split with explicit labels and output details
-
-```powershell
-$splitParams = @{
-  SourceIso = 'D:\ISO\Windows.iso'
-  EditionName = 'Standard', 'Datacenter'
-  WorkingRoot = 'D:\Work\Splitter'
-  OutputRoot = 'D:\Output'
-  OutputBaseName = 'WindowsCustom'
-  LabelPrefix = 'WIN'
-  EditionLabelMap = @{ Standard = 'WINSTD'; Datacenter = 'WINDC' }
-  PassThru = $true
-  Verbose = $true
-}
-
-$result = Split-WindowsInstallMedia @splitParams
-
-$result | Format-Table Edition, ImageCount, OutputIso, Label -AutoSize
-```
-
-### Discover valid edition filters from an ISO
-
-Use this when you are not sure whether the ISO contains names like Standard, Datacenter, Enterprise, and so on.
+This is the cleanest copy-paste path when you want one edition, PowerShell 7,
+and an unattended install.
 
 ```powershell
 Import-Module .\Splitter.psd1 -Force
 
-$mount = Mount-WindowsInstallMedia -Path 'C:\LabSources\ISOs\26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso' -Verbose
+$sourceIso = 'C:\ISO\Server2025.iso'
+$workingRoot = 'C:\work'
+$outputIso = 'C:\out\Server2025_DesktopExperience-Standard.iso'
+$msiSource = 'D:\Packages\PowerShell-7.5.2-win-x64.msi'
+$unattendSource = 'D:\AnswerFiles\autounattend.xml'
 
-$imagePath = Join-Path $mount.DriveRoot 'sources\install.wim'
-if (-not (Test-Path $imagePath)) {
-  $imagePath = Join-Path $mount.DriveRoot 'sources\install.esd'
+$mount = Mount-WindowsInstallMedia -Path $sourceIso -Verbose
+
+$baseMedia = Join-Path $workingRoot 'BaseMedia'
+New-WindowsInstallMedia -SourcePath $mount.DriveRoot -DestinationPath $baseMedia -Verbose
+
+$baseImage = Join-Path $baseMedia 'sources\install.wim'
+if (-not (Test-Path $baseImage)) {
+  $baseImage = Join-Path $baseMedia 'sources\install.esd'
 }
 
-Get-WindowsInstallImage -ImagePath $imagePath |
-  Format-Table Index, Name, Description -AutoSize
+$selectedImage = Get-WindowsInstallImage -ImagePath $baseImage -Name '*Standard*'
+
+$editionMedia = Join-Path $workingRoot 'Server2025_DesktopExperience-Standard'
+New-WindowsInstallMedia -SourcePath $baseMedia -DestinationPath $editionMedia -Verbose
+
+Remove-WindowsInstallImage -MediaRoot $editionMedia -Verbose
+
+$destinationImage = Join-Path $editionMedia (Join-Path 'sources' ([System.IO.Path]::GetFileName($baseImage)))
+Export-WindowsInstallImage -SourceImagePath $baseImage -DestinationWim $destinationImage -Image $selectedImage -Compression max -Verbose
+
+Add-UnattendFile -MediaRoot $editionMedia -UnattendPath $unattendSource -Verbose
+
+$payloadDir = Join-Path $editionMedia 'sources\$OEM$\$1\Install'
+New-Item -Path $payloadDir -ItemType Directory -Force | Out-Null
+Copy-Item -LiteralPath $msiSource -Destination (Join-Path $payloadDir 'PowerShell-7.5.2-win-x64.msi') -Force
+
+Build-BootableIso -MediaRoot $editionMedia -OutputIso $outputIso -Label 'WINSTD' -Verbose
 
 Dismount-WindowsInstallMedia -InputObject $mount -Verbose
 ```
 
-### Build WinServer_2025-Standard.iso and WinServer_2025-Datacenter.iso
+### Command reference
+
+Use these when you already know the step you need.
 
 ```powershell
-Import-Module .\Splitter.psd1 -Force
-
-$splitParams = @{
-  SourceIso = 'C:\LabSources\ISOs\26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso'
-  EditionName = 'Standard', 'Datacenter'
-  WorkingRoot = 'C:\work'
-  OutputRoot = 'C:\out'
-  OutputBaseName = 'WinServer_2025'
-  Verbose = $true
+# Discover image names and indexes
+$mount = Mount-WindowsInstallMedia -Path 'C:\ISO\Windows.iso' -Verbose
+$imagePath = Join-Path $mount.DriveRoot 'sources\install.wim'
+if (-not (Test-Path $imagePath)) {
+  $imagePath = Join-Path $mount.DriveRoot 'sources\install.esd'
 }
+Get-WindowsInstallImage -ImagePath $imagePath | Format-Table Index, Name, Description -AutoSize
+Dismount-WindowsInstallMedia -InputObject $mount -Verbose
 
-$result = Split-WindowsInstallMedia @splitParams
-$result | Format-Table Edition, OutputIso, Label -AutoSize
+# Split a source ISO and stop before building the ISO
+Split-WindowsInstallMedia -SourceIso 'C:\ISO\Windows.iso' -EditionName 'Standard' -WorkingRoot 'C:\work' -OutputRoot 'C:\out' -SkipBootableIso -PassThru
+
+# Split and build immediately
+Split-WindowsInstallMedia -SourceIso 'C:\ISO\Windows.iso' -EditionName 'Standard', 'Datacenter' -WorkingRoot 'C:\work' -OutputRoot 'C:\out' -OutputBaseName 'WinServer_2025' -PassThru
+
+# Inject drivers, packages, and unattend files into an existing working folder
+Add-WindowsDriver -MediaRoot 'D:\Work\WindowsCustom-Standard' -DriverPath 'D:\Drivers' -Recurse -Index 1 -Verbose
+Add-WindowsPackage -MediaRoot 'D:\Work\WindowsCustom-Standard' -PackagePath 'D:\Packages\kb.cab' -Index 1 -Verbose
+Add-UnattendFile -MediaRoot 'D:\Work\WindowsCustom-Standard' -UnattendPath 'D:\AnswerFiles\autounattend.xml' -Verbose
+
+# Build the final ISO from edited media
+Build-BootableIso -MediaRoot 'D:\Work\WindowsCustom-Standard' -OutputIso 'D:\Out\WindowsCustom-Standard.iso' -Label 'WINSTD' -Verbose
 ```
 
-Expected output filenames:
+### Notes
 
-- C:\out\WinServer_2025-Standard.iso
-- C:\out\WinServer_2025-Datacenter.iso
-
-### Split an Enterprise-only ISO without guessing
-
-```powershell
-Import-Module .\Splitter.psd1 -Force
-
-$splitParams = @{
-  SourceIso = 'C:\LabSources\ISOs\ClientEnterpriseEval.iso'
-  EditionName = '*Enterprise*'
-  WorkingRoot = 'C:\work'
-  OutputRoot = 'C:\out'
-  OutputBaseName = 'Windows_11_Enterprise'
-  PassThru = $true
-  Verbose = $true
-}
-
-Split-WindowsInstallMedia @splitParams |
-  Format-Table Edition, ImageCount, OutputIso -AutoSize
-```
-
-### Build only Desktop Experience or only Server Core
-
-```powershell
-Import-Module .\Splitter.psd1 -Force
-
-# Only Desktop Experience
-$desktopExperienceParams = @{
-  SourceIso = 'C:\LabSources\ISOs\Server2025.iso'
-  EditionName = 'Standard'
-  DesktopExperience = $true
-  WorkingRoot = 'C:\work'
-  OutputRoot = 'C:\out'
-  OutputBaseName = 'WinServer_2025'
-  Verbose = $true
-}
-
-Split-WindowsInstallMedia @desktopExperienceParams
-
-# Only Server Core
-$serverCoreParams = @{
-  SourceIso = 'C:\LabSources\ISOs\Server2025.iso'
-  EditionName = 'Standard'
-  ServerCore = $true
-  WorkingRoot = 'C:\work'
-  OutputRoot = 'C:\out'
-  OutputBaseName = 'WinServer_2025'
-  Verbose = $true
-}
-
-Split-WindowsInstallMedia @serverCoreParams
-```
-
-Note: ServerCore filtering is inferred as "not Desktop Experience" because Server
-Core images typically do not include "(Desktop Experience)" in the name.
-
-## Common Workflows
-
-### Inspect indexes in install.wim/install.esd
-
-```powershell
-Get-WindowsInstallImage -ImagePath 'D:\Media\sources\install.wim'
-Get-WindowsInstallImage -ImagePath 'D:\Media\sources\install.wim' -Name '*Datacenter*'
-Get-WindowsInstallImage -ImagePath 'D:\Media\sources\install.wim' -Index 1,2
-```
-
-### Export selected indexes to a new WIM
-
-```powershell
-$images = Get-WindowsInstallImage -ImagePath 'D:\Media\sources\install.wim' -Name '*Standard*'
-
-$exportParams = @{
-  SourceImagePath = 'D:\Media\sources\install.wim'
-  DestinationWim = 'D:\Media\sources\install.standard.wim'
-  Image = $images
-  Compression = 'max'
-  Verbose = $true
-}
-
-Export-WindowsInstallImage @exportParams
-```
-
-### Add drivers to one or more indexes
-
-```powershell
-$driverParams = @{
-  MediaRoot = 'D:\Work\WindowsCustom-Standard'
-  DriverPath = 'D:\Drivers'
-  Recurse = $true
-  Index = 1
-  Verbose = $true
-}
-
-Add-WindowsDriver @driverParams
-```
-
-### Add packages to one or more indexes
-
-```powershell
-$packageParams = @{
-  MediaRoot = 'D:\Work\WindowsCustom-Standard'
-  PackagePath = 'D:\Packages\kb.cab'
-  Index = 1
-  Verbose = $true
-}
-
-Add-WindowsPackage @packageParams
-```
-
-### Add unattended setup file
-
-```powershell
-$unattendParams = @{
-  MediaRoot = 'D:\Work\WindowsCustom-Standard'
-  UnattendPath = 'D:\AnswerFiles\autounattend.xml'
-  Verbose = $true
-}
-
-Add-UnattendFile @unattendParams
-```
+- `Split-WindowsInstallMedia` still builds the ISO by default so the common case
+  stays one command.
+- Use `-SkipBootableIso` when you want to stop after the media folder is ready.
+- `sources\$OEM$\$1\Install` copies files to `C:\Install` on the installed OS.
+- `FirstLogonCommands` in `autounattend.xml` is the simplest place to launch
+  an MSI after setup.
 
 ## Troubleshooting
 
