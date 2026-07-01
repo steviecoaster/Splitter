@@ -16,9 +16,15 @@ Splitter is a PowerShell module for working with Windows installation ISOs and i
 ## Requirements
 
 - Windows with PowerShell 5.1+ or PowerShell 7+
-- DISM available on the system
-- Windows ADK Deployment Tools installed for oscdimg.exe
-  - Expected path is detected automatically by Get-OscdimgPath
+- Required binary: dism.exe (used for image discovery/export/servicing)
+  - Expected from Windows: C:\Windows\System32\dism.exe
+  - Verify: Get-Command dism.exe
+- Required binary for ISO creation: oscdimg.exe (used by Build-BootableIso and Split-WindowsInstallMedia when building an ISO)
+  - Expected ADK path is detected automatically by Get-OscdimgPath:
+    - C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe
+    - C:\Program Files\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\amd64\Oscdimg\oscdimg.exe
+- Chocolatey install commands (run elevated) if needed:
+  - Install Windows ADK: choco install windows-adk -y
 - Permissions required to mount and dismount ISO images
 
 ## Install and Import
@@ -175,6 +181,12 @@ payload at the path the sample answer file expects.
 
 - oscdimg.exe not found:
   - Install Windows ADK Deployment Tools.
+  - Chocolatey install:
+    - choco install windows-adk -y
+  - Confirm path with Get-OscdimgPath after install.
+- dism.exe not found:
+  - Confirm with Get-Command dism.exe.
+  - Use a standard Windows image with DISM available in C:\Windows\System32.
 - No matching indexes found:
   - Run Example A to list available indexes and names from the source ISO.
   - Then rerun split with EditionName values that match Name or Description.
