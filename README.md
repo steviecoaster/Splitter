@@ -75,7 +75,7 @@ Import-Module .\Splitter.psd1 -Force
 $sourceIso = 'C:\ISO\Server2025.iso'
 $workingRoot = 'C:\work'
 $outputIso = 'C:\out\Server2025_DesktopExperience-Standard.iso'
-$msiSource = 'D:\Packages\PowerShell-7.5.2-win-x64.msi'
+$msiSource = 'D:\Packages\PowerShell-7.6.3-win-x64.msi'
 $unattendSource = 'D:\AnswerFiles\autounattend.xml'
 
 $mount = Mount-WindowsInstallMedia -Path $sourceIso -Verbose
@@ -102,7 +102,7 @@ Add-UnattendFile -MediaRoot $editionMedia -UnattendPath $unattendSource -Verbose
 
 $payloadDir = Join-Path $editionMedia 'sources\$OEM$\$1\Install'
 New-Item -Path $payloadDir -ItemType Directory -Force | Out-Null
-Copy-Item -LiteralPath $msiSource -Destination (Join-Path $payloadDir 'PowerShell-7.5.2-win-x64.msi') -Force
+Copy-Item -LiteralPath $msiSource -Destination (Join-Path $payloadDir 'PowerShell-7.6.3-win-x64.msi') -Force
 
 Build-BootableIso -MediaRoot $editionMedia -OutputIso $outputIso -Label 'WINSTD' -Verbose
 
@@ -144,8 +144,32 @@ Build-BootableIso -MediaRoot 'D:\Work\WindowsCustom-Standard' -OutputIso 'D:\Out
   stays one command.
 - Use `-SkipBootableIso` when you want to stop after the media folder is ready.
 - `sources\$OEM$\$1\Install` copies files to `C:\Install` on the installed OS.
+- The MSI filename copied into `sources\$OEM$\$1\Install` must exactly match the
+  path referenced by `autounattend.xml`.
 - `FirstLogonCommands` in `autounattend.xml` is the simplest place to launch
-  an MSI after setup.
+  an MSI after setup, but it runs only after the first interactive logon.
+
+### Verify unattend payloads before booting
+
+Mount the finished ISO and confirm these paths exist before testing in a VM or
+on hardware:
+
+```powershell
+$iso = 'C:\out\Server2025_DesktopExperience-Standard.iso'
+$mount = Mount-DiskImage -ImagePath $iso -PassThru
+$volume = $mount | Get-Volume
+$drive = "$($volume.DriveLetter):\"
+
+Test-Path (Join-Path $drive 'autounattend.xml')
+Test-Path (Join-Path $drive 'sources\$OEM$\$1\Install\PowerShell-7.6.3-win-x64.msi')
+
+Get-Content (Join-Path $drive 'autounattend.xml') | Select-String 'PowerShell-7.6.3-win-x64.msi'
+
+Dismount-DiskImage -ImagePath $iso
+```
+
+If all three checks succeed, the ISO contains both the answer file and the MSI
+payload at the path the sample answer file expects.
 
 ## Troubleshooting
 
