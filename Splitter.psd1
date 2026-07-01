@@ -73,6 +73,7 @@ FunctionsToExport = @(
     'Add-UnattendFile',
     'Add-WindowsDriver',
     'Add-WindowsPackage',
+    'Build-BootableIso'
     'Dismount-WindowsInstallMedia',
     'Export-WindowsInstallImage',
     'Get-WindowsInstallImage',
