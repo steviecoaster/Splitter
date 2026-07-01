@@ -35,6 +35,16 @@ function New-BootableIso {
         throw "Missing UEFI boot file: $efisys"
     }
 
+    $outputIsoParent = Split-Path -Path $OutputIso -Parent
+    if (-not [string]::IsNullOrWhiteSpace($outputIsoParent)) {
+        $newOutputDirectoryParams = @{
+            Path = $outputIsoParent
+            ItemType = 'Directory'
+            Force = $true
+        }
+        New-Item @newOutputDirectoryParams | Out-Null
+    }
+
     $testOutputIsoParams = @{
         Path = $OutputIso
     }
