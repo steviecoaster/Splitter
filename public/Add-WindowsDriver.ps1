@@ -97,6 +97,7 @@ function Add-WindowsDriver {
             $invokeMountProcessParams = @{
                 FilePath = 'dism.exe'
                 ArgumentList = $mountArgs
+                ErrorAction = 'Stop'
             }
             Invoke-NativeProcess @invokeMountProcessParams
         }
@@ -127,6 +128,7 @@ function Add-WindowsDriver {
                     $invokeAddDriverProcessParams = @{
                         FilePath = 'dism.exe'
                         ArgumentList = $addDriverArgs
+                        ErrorAction = 'Stop'
                     }
                     Invoke-NativeProcess @invokeAddDriverProcessParams
                 }
@@ -159,6 +161,7 @@ function Add-WindowsDriver {
                 $invokeUnmountProcessParams = @{
                     FilePath = 'dism.exe'
                     ArgumentList = $unmountArgs
+                    ErrorAction = 'Stop'
                 }
                 Invoke-NativeProcess @invokeUnmountProcessParams
             }

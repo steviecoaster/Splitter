@@ -17,6 +17,7 @@ function Get-ImageInfo {
             FilePath = 'dism.exe'
             ArgumentList = $dismArgs
             CaptureOutput = $true
+            ErrorAction = 'Stop'
         }
         $output = Invoke-NativeProcess @invokeNativeProcessParams
     }

@@ -5,11 +5,10 @@ foreach ($file in @($private + $public)) {
     . $file.FullName
 }
 
-$exportedFunctions = $public | ForEach-Object {
-    [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+try {
+    $null = Get-OscdimgPath -ErrorAction Stop
+}
+catch {
+    throw "Missing required binary: oscdimg.exe (DISM intentionally excluded). Install with 'choco install windows-adk -y'. $($_.Exception.Message)"
 }
 
-$exportModuleMemberParams = @{
-    Function = $exportedFunctions
-}
-Export-ModuleMember @exportModuleMemberParams

@@ -87,6 +87,7 @@ function Export-WindowsInstallImage {
         $invokeNativeProcessParams = @{
             FilePath = 'dism.exe'
             ArgumentList = $dismArgs
+            ErrorAction = 'Stop'
         }
 
         try {

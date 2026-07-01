@@ -70,6 +70,7 @@ function New-BootableIso {
         $invokeNativeProcessParams = @{
             FilePath = $OscdimgPath
             ArgumentList = $oscdimgArgs
+            ErrorAction = 'Stop'
         }
         Invoke-NativeProcess @invokeNativeProcessParams
     }

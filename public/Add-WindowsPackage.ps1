@@ -97,6 +97,7 @@ function Add-WindowsPackage {
             $invokeMountProcessParams = @{
                 FilePath = 'dism.exe'
                 ArgumentList = $mountArgs
+                ErrorAction = 'Stop'
             }
             Invoke-NativeProcess @invokeMountProcessParams
         }
@@ -127,6 +128,7 @@ function Add-WindowsPackage {
                     $invokeAddPackageProcessParams = @{
                         FilePath = 'dism.exe'
                         ArgumentList = $addPackageArgs
+                        ErrorAction = 'Stop'
                     }
                     Invoke-NativeProcess @invokeAddPackageProcessParams
                 }
@@ -159,6 +161,7 @@ function Add-WindowsPackage {
                 $invokeUnmountProcessParams = @{
                     FilePath = 'dism.exe'
                     ArgumentList = $unmountArgs
+                    ErrorAction = 'Stop'
                 }
                 Invoke-NativeProcess @invokeUnmountProcessParams
             }
