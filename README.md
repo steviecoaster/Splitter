@@ -29,11 +29,24 @@ Splitter is a PowerShell module for working with Windows installation ISOs and i
 
 ## Install and Import
 
-From the repository root:
+### From the repository root:
 
 ```powershell
 Import-Module .\Splitter.psd1 -Force
 Get-Command -Module Splitter
+```
+
+### From the PowerShell Gallery
+
+#### PowerShell 7+
+```powershell
+Install-PSResource Splitter -Scope CurrentUser
+```
+
+#### Windows PowerShell
+
+```powershell
+Install-Module Splitter -Scope CurrentUser
 ```
 
 ## Available Commands
